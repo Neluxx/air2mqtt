@@ -18,6 +18,9 @@ log = logging.getLogger(__name__)
 # A value is marked unavailable in HA if no update arrives within this many intervals.
 _EXPIRE_AFTER_INTERVALS = 3
 
+# How long to wait for the broker at startup before taking the first measurement.
+_STARTUP_CONNECT_TIMEOUT_SECONDS = 10
+
 
 class Air2Mqtt:
     def __init__(
@@ -38,6 +41,8 @@ class Air2Mqtt:
     def run(self, stop_event: threading.Event) -> None:
         """Measure and publish until ``stop_event`` is set."""
         self._mqtt.start()
+        if not self._mqtt.wait_until_connected(_STARTUP_CONNECT_TIMEOUT_SECONDS):
+            log.warning("MQTT broker not reachable yet, measuring anyway.")
         try:
             while not stop_event.is_set():
                 started = time.monotonic()
