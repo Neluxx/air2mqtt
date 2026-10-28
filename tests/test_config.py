@@ -55,6 +55,8 @@ def test_missing_host(monkeypatch: pytest.MonkeyPatch) -> None:
     [
         ("READ_INTERVAL", "abc"),
         ("READ_INTERVAL", "2"),
+        ("MQTT_TLS", "ture"),
+        ("LOG_LEVEL", "VERBOSE"),
     ],
 )
 def test_invalid_values(monkeypatch: pytest.MonkeyPatch, name: str, value: str) -> None:

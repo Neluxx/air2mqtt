@@ -9,6 +9,10 @@ from dataclasses import dataclass
 
 from dotenv import find_dotenv, load_dotenv
 
+_LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
+_TRUE_VALUES = {"1", "true", "yes", "on"}
+_FALSE_VALUES = {"0", "false", "no", "off"}
+
 
 class ConfigError(ValueError):
     """Raised when a required setting is missing or a value is invalid."""
@@ -54,7 +58,7 @@ class Settings:
             device_name=os.getenv("DEVICE_NAME", "Air2MQTT"),
             read_interval=_int("READ_INTERVAL", 60, minimum=5),
             mhz19_port=os.getenv("MHZ19_PORT", "/dev/serial0"),
-            log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
+            log_level=_choice("LOG_LEVEL", "INFO", _LOG_LEVELS),
         )
 
 
@@ -82,7 +86,19 @@ def _bool(name: str, default: bool) -> bool:
     raw = os.getenv(name)
     if raw is None or raw.strip() == "":
         return default
-    return raw.strip().lower() in {"1", "true", "yes", "on"}
+    value = raw.strip().lower()
+    if value in _TRUE_VALUES:
+        return True
+    if value in _FALSE_VALUES:
+        return False
+    raise ConfigError(f"{name} must be true or false, got {raw!r}.")
+
+
+def _choice(name: str, default: str, choices: tuple[str, ...]) -> str:
+    value = (os.getenv(name) or default).strip().upper()
+    if value not in choices:
+        raise ConfigError(f"{name} must be one of {', '.join(choices)}, got {value!r}.")
+    return value
 
 
 def _slugify(value: str) -> str:
