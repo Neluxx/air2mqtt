@@ -57,14 +57,17 @@ class Air2Mqtt:
                 log.error("%s: %s", sensor.name, exc)
                 continue
 
-            for metric, value in reading.items():
-                self._mqtt.publish(self._topics.state(metric), metric.format(value), retain=True)
+            results = [
+                self._mqtt.publish_state(self._topics.state(metric), metric.format(value))
+                for metric, value in reading.items()
+            ]
+            published = all(results)
+            values = ", ".join(f"{m.key}={m.format(v)} {m.unit}" for m, v in reading.items())
 
-            log.info(
-                "%s: %s",
-                sensor.name,
-                ", ".join(f"{m.key}={m.format(v)} {m.unit}" for m, v in reading.items()),
-            )
+            if published:
+                log.info("%s: %s", sensor.name, values)
+            else:
+                log.warning("%s: %s (not sent, MQTT broker unreachable)", sensor.name, values)
 
     def _publish_discovery(self) -> None:
         payload = build_discovery_payload(

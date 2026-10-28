@@ -20,7 +20,6 @@ OFFLINE = "offline"
 _QOS = 1
 _RECONNECT_MIN_DELAY = 1
 _RECONNECT_MAX_DELAY = 120
-_MAX_QUEUED_MESSAGES = 100
 _SHUTDOWN_TIMEOUT_SECONDS = 5
 
 MessageHandler = Callable[[str], None]
@@ -46,7 +45,6 @@ class MqttClient:
         # The broker publishes "offline" on our behalf if we disappear unexpectedly.
         self._client.will_set(availability_topic, OFFLINE, qos=_QOS, retain=True)
         self._client.reconnect_delay_set(_RECONNECT_MIN_DELAY, _RECONNECT_MAX_DELAY)
-        self._client.max_queued_messages_set(_MAX_QUEUED_MESSAGES)
 
         self._client.on_connect = self._handle_connect
         self._client.on_disconnect = self._handle_disconnect
@@ -63,9 +61,22 @@ class MqttClient:
         self._client.message_callback_add(topic, self._wrap(handler))
 
     def publish(self, topic: str, payload: str, *, retain: bool = False) -> None:
+        """Publish reliably (QoS 1). Intended for config and availability messages."""
         result = self._client.publish(topic, payload, qos=_QOS, retain=retain)
         if result.rc not in (mqtt.MQTT_ERR_SUCCESS, mqtt.MQTT_ERR_NO_CONN):
             log.warning("Publishing to %s failed: %s", topic, mqtt.error_string(result.rc))
+
+    def publish_state(self, topic: str, payload: str) -> bool:
+        """Publish a live measurement, or drop it if the broker is unreachable.
+
+        Measurements are deliberately not buffered: Home Assistant timestamps a
+        state on arrival, so values delivered late would show up at the wrong time.
+        Returns whether the value was handed to the broker connection.
+        """
+        if not self._client.is_connected():
+            return False
+        result = self._client.publish(topic, payload, qos=0, retain=False)
+        return result.rc == mqtt.MQTT_ERR_SUCCESS
 
     def start(self) -> None:
         log.info("Connecting to MQTT broker %s:%d …", self._settings.host, self._settings.port)

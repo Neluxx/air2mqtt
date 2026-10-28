@@ -141,13 +141,23 @@ With `DEVICE_ID=livingroom`:
 |-----------------------------------------------|--------------------------------|----------|
 | `homeassistant/device/livingroom/config`      | Discovery JSON                 | yes      |
 | `air2mqtt/livingroom/availability`            | `online` / `offline`           | yes      |
-| `air2mqtt/livingroom/temperature`             | `21.4` (°C)                    | yes      |
-| `air2mqtt/livingroom/humidity`                | `48.1` (%)                     | yes      |
-| `air2mqtt/livingroom/pressure`                | `1013.2` (hPa)                 | yes      |
-| `air2mqtt/livingroom/carbon_dioxide`          | `812` (ppm)                    | yes      |
+| `air2mqtt/livingroom/temperature`             | `21.4` (°C)                    | no       |
+| `air2mqtt/livingroom/humidity`                | `48.1` (%)                     | no       |
+| `air2mqtt/livingroom/pressure`                | `1013.2` (hPa)                 | no       |
+| `air2mqtt/livingroom/carbon_dioxide`          | `812` (ppm)                    | no       |
 
 The node listens on `homeassistant/status` and re-publishes its discovery
 config whenever Home Assistant restarts.
+
+### When the broker is unreachable
+
+Measurements taken while the broker is unreachable are logged and dropped,
+not buffered. Home Assistant timestamps every state on arrival, so values
+delivered late would appear at the wrong time. Instead, the history shows a
+gap and the sensors turn `unavailable` after three missed intervals.
+
+Measurement values are not retained either: Home Assistant restores the last
+state itself, and a replayed retained value could revive an expired sensor.
 
 ---
 
