@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import threading
 from collections.abc import Callable
 from typing import Any
 
@@ -32,6 +33,7 @@ class MqttClient:
         self._availability_topic = availability_topic
         self._connect_handlers: list[ConnectHandler] = []
         self._subscriptions: dict[str, MessageHandler] = {}
+        self._connected = threading.Event()
 
         self._client = mqtt.Client(
             callback_api_version=CallbackAPIVersion.VERSION2,
@@ -87,6 +89,10 @@ class MqttClient:
         )
         self._client.loop_start()
 
+    def wait_until_connected(self, timeout: float) -> bool:
+        """Block until the client is connected or ``timeout`` expires."""
+        return self._connected.wait(timeout)
+
     def stop(self) -> None:
         if self._client.is_connected():
             info = self._client.publish(self._availability_topic, OFFLINE, qos=_QOS, retain=True)
@@ -116,15 +122,17 @@ class MqttClient:
         for handler in self._connect_handlers:
             handler()
         self.publish(self._availability_topic, ONLINE, retain=True)
+        self._connected.set()
 
-    @staticmethod
     def _handle_disconnect(
+        self,
         _client: mqtt.Client,
         _userdata: Any,
         _flags: mqtt.DisconnectFlags,
         reason_code: ReasonCode,
         _properties: Any,
     ) -> None:
+        self._connected.clear()
         if reason_code.is_failure:
             log.warning("Lost connection to MQTT broker (%s), reconnecting …", reason_code)
 
