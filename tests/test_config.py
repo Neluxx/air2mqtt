@@ -14,6 +14,7 @@ _VARIABLES = (
     "DEVICE_ID",
     "DEVICE_NAME",
     "READ_INTERVAL",
+    "TEMPERATURE_OFFSET",
     "MHZ19_PORT",
     "LOG_LEVEL",
 )
@@ -36,12 +37,18 @@ def test_defaults() -> None:
     assert settings.base_topic == "air2mqtt"
     assert settings.discovery_prefix == "homeassistant"
     assert settings.read_interval == 60
+    assert settings.temperature_offset == 0.0
     assert settings.log_level == "INFO"
 
 
 def test_device_id_is_slugified(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("DEVICE_ID", "Living Room #1")
     assert Settings.from_env().device_id == "living_room_1"
+
+
+def test_temperature_offset(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("TEMPERATURE_OFFSET", "-1.5")
+    assert Settings.from_env().temperature_offset == -1.5
 
 
 def test_missing_host(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -56,6 +63,9 @@ def test_missing_host(monkeypatch: pytest.MonkeyPatch) -> None:
         ("READ_INTERVAL", "abc"),
         ("READ_INTERVAL", "2"),
         ("MQTT_TLS", "ture"),
+        ("TEMPERATURE_OFFSET", "warm"),
+        ("TEMPERATURE_OFFSET", "-12"),
+        ("TEMPERATURE_OFFSET", "nan"),
         ("LOG_LEVEL", "VERBOSE"),
     ],
 )

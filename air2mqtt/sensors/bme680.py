@@ -20,7 +20,7 @@ class BME680Sensor:
     name = "BME680"
     metrics = (TEMPERATURE, HUMIDITY, PRESSURE)
 
-    def __init__(self) -> None:
+    def __init__(self, temperature_offset: float = 0.0) -> None:
         try:
             import bme680
         except ImportError as exc:
@@ -37,7 +37,14 @@ class BME680Sensor:
         # The gas heater is not used and would skew the temperature reading.
         self._sensor.set_gas_status(bme680.DISABLE_GAS_MEAS)
 
-        log.info("BME680 initialised.")
+        # Compensates self-heating (e.g. from the Pi below the sensor). The driver applies
+        # the offset before humidity compensation, so relative humidity stays consistent.
+        self._sensor.set_temp_offset(temperature_offset)
+
+        if temperature_offset:
+            log.info("BME680 initialised (temperature offset %+.2f °C).", temperature_offset)
+        else:
+            log.info("BME680 initialised.")
 
     @staticmethod
     def _connect(bme680: ModuleType) -> Any:

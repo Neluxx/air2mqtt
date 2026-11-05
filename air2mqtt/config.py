@@ -36,6 +36,7 @@ class Settings:
     device_id: str
     device_name: str
     read_interval: int
+    temperature_offset: float
     mhz19_port: str
     log_level: str
 
@@ -57,6 +58,7 @@ class Settings:
             device_id=_slugify(os.getenv("DEVICE_ID") or socket.gethostname()),
             device_name=os.getenv("DEVICE_NAME", "Air2MQTT"),
             read_interval=_int("READ_INTERVAL", 60, minimum=5),
+            temperature_offset=_float("TEMPERATURE_OFFSET", 0.0, limit=10.0),
             mhz19_port=os.getenv("MHZ19_PORT", "/dev/serial0"),
             log_level=_choice("LOG_LEVEL", "INFO", _LOG_LEVELS),
         )
@@ -79,6 +81,20 @@ def _int(name: str, default: int, *, minimum: int = 1) -> int:
         raise ConfigError(f"{name} must be an integer, got {raw!r}.") from exc
     if value < minimum:
         raise ConfigError(f"{name} must be >= {minimum}, got {value}.")
+    return value
+
+
+def _float(name: str, default: float, *, limit: float) -> float:
+    """Parse a float whose absolute value must not exceed ``limit``."""
+    raw = os.getenv(name)
+    if raw is None or raw.strip() == "":
+        return default
+    try:
+        value = float(raw)
+    except ValueError as exc:
+        raise ConfigError(f"{name} must be a number, got {raw!r}.") from exc
+    if not -limit <= value <= limit:
+        raise ConfigError(f"{name} must be between -{limit:g} and {limit:g}, got {value:g}.")
     return value
 
 
