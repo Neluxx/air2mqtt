@@ -128,6 +128,7 @@ All settings are environment variables, read from `/opt/air2mqtt/.env`.
 | `DEVICE_ID`           | hostname         | Stable, unique ID of this node                     |
 | `DEVICE_NAME`         | `Air2MQTT`       | Device name shown in Home Assistant                |
 | `READ_INTERVAL`       | `60`             | Seconds between measurements (min. 5)              |
+| `TEMPERATURE_OFFSET`  | `0`              | BME680 temperature correction in °C (−10 to 10)    |
 | `MHZ19_PORT`          | `/dev/serial0`   | UART port of the MH-Z19                            |
 | `LOG_LEVEL`           | `INFO`           | `DEBUG`, `INFO`, `WARNING` or `ERROR`              |
 
@@ -205,4 +206,5 @@ python3 -m venv .venv
 | `Permission denied` on I²C / UART | `groups` – the service user needs `i2c` and `dialout`. |
 | `MQTT connection refused` | Check `MQTT_HOST`, `MQTT_USERNAME` and `MQTT_PASSWORD`. |
 | Device not visible in HA | Is the MQTT integration set up and the discovery prefix correct? |
+| Temperature reads too high | Heat from the Pi warms the BME680. Compare with a reference thermometer and set `TEMPERATURE_OFFSET` (e.g. `-1.5`). |
 | CO₂ values look wrong after power-up | The MH-Z19 needs about 3 minutes to warm up. |

@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 def create_sensors(settings: Settings) -> list[Sensor]:
     """Initialise every known sensor; a missing sensor is logged, not fatal."""
     factories: dict[str, Callable[[], Sensor]] = {
-        "BME680": BME680Sensor,
+        "BME680": lambda: BME680Sensor(settings.temperature_offset),
         "MH-Z19": lambda: MHZ19Sensor(settings.mhz19_port),
     }
 
