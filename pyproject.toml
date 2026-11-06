@@ -12,7 +12,7 @@ authors = [{ name = "Fabian Arndt" }]
 requires-python = ">=3.11"
 dependencies = [
     "bme680>=2.0",
-    "paho-mqtt>=2.1",
+    "paho-mqtt>=2.1,<3",
     "pyserial>=3.5",
     "python-dotenv>=1.0",
 ]
