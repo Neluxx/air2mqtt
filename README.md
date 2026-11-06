@@ -41,10 +41,25 @@ MH-Z19 TX → Pi RX and MH-Z19 RX → Pi TX (cross-over).
 
 ## Home Assistant preparation
 
-1. Install the **Mosquitto broker** add-on (or use any other MQTT broker).
-2. Add the **MQTT** integration (Settings → Devices & services).
-3. Create a dedicated Home Assistant user for the node (Settings → People → Users)
-   and use its credentials as `MQTT_USERNAME` / `MQTT_PASSWORD`.
+air2mqtt publishes its readings to Home Assistant over MQTT, so you need a running
+Home Assistant instance with an MQTT broker.
+
+1. **Install Home Assistant.** Follow the official guide for your hardware, e.g.
+   [Home Assistant on a Raspberry Pi](https://www.home-assistant.io/installation/raspberrypi/).
+   Other platforms are listed on the [installation overview](https://www.home-assistant.io/installation/).
+2. **Set up an MQTT broker.** The easiest option is the Mosquitto broker add-on together
+   with the MQTT integration. See the official
+   [MQTT integration documentation](https://www.home-assistant.io/integrations/mqtt/).
+   Any other MQTT broker works as well.
+3. **Note the broker credentials.** You'll need them for the `.env` file
+   (see [Configuration](#configuration)):
+
+   | `.env` variable | Value                                      |
+   |-----------------|--------------------------------------------|
+   | `MQTT_HOST`     | Hostname or IP of your broker              |
+   | `MQTT_PORT`     | Broker port (`1883`, or `8883` with TLS)   |
+   | `MQTT_USERNAME` | Username of the MQTT / Home Assistant user |
+   | `MQTT_PASSWORD` | Password of that user                      |
 
 ---
 
