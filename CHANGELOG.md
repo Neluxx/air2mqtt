@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+
+### Changed
+
+### Deprecated
+
+### Removed
+
+### Fixed
+
+### Security
+
+### Dependencies
+
+## [0.1.0](https://github.com/Neluxx/air2mqtt/releases/tag/0.1.0) - 2026-11-06
+
+### Added
 - Read CO₂ from an MH-Z19 via UART without root privileges
 - Read temperature, humidity and pressure from a BME680 via I²C
 - Publish all values to Home Assistant via device-based MQTT discovery
