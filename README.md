@@ -185,17 +185,18 @@ air2mqtt/
 ├── .env.example
 ├── deploy/
 │   └── air2mqtt.service      # systemd unit
-├── air2mqtt/
-│   ├── __main__.py           # entry point, wiring, signal handling
-│   ├── app.py                # measurement loop
-│   ├── config.py             # settings from environment
-│   ├── metrics.py            # measured quantities (unit, device class, precision)
-│   ├── homeassistant.py      # topics and discovery payload
-│   ├── mqtt_client.py        # paho-mqtt wrapper (LWT, reconnects)
-│   └── sensors/
-│       ├── base.py           # Sensor protocol and SensorError
-│       ├── bme680.py         # BME680 driver wrapper
-│       └── mhz19.py          # MH-Z19 UART protocol
+├── src/
+│   └── air2mqtt/
+│       ├── __main__.py       # entry point, wiring, signal handling
+│       ├── app.py            # measurement loop
+│       ├── config.py         # settings from environment
+│       ├── metrics.py        # measured quantities (unit, device class, precision)
+│       ├── homeassistant.py  # topics and discovery payload
+│       ├── mqtt_client.py    # paho-mqtt wrapper (LWT, reconnects)
+│       └── sensors/
+│           ├── base.py       # Sensor protocol and SensorError
+│           ├── bme680.py     # BME680 driver wrapper
+│           └── mhz19.py      # MH-Z19 UART protocol
 └── tests/
 ```
 

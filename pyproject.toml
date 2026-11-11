@@ -30,7 +30,7 @@ Repository = "https://github.com/Neluxx/air2mqtt"
 version = { attr = "air2mqtt.__version__" }
 
 [tool.setuptools.packages.find]
-include = ["air2mqtt*"]
+where = ["src"]
 
 [tool.ruff]
 line-length = 100
