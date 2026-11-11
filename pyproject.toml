@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "air2mqtt"
-dynamic = ["version"]
+version = "0.1.0"
 description = "Reads BME680 and MH-Z19 sensors and publishes them to Home Assistant via MQTT."
 readme = "README.md"
 license = "MIT"
@@ -25,9 +25,6 @@ air2mqtt = "air2mqtt.__main__:main"
 
 [project.urls]
 Repository = "https://github.com/Neluxx/air2mqtt"
-
-[tool.setuptools.dynamic]
-version = { attr = "air2mqtt.__version__" }
 
 [tool.setuptools.packages.find]
 where = ["src"]

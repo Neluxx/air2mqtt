@@ -4,6 +4,7 @@ requires-python = ">=3.11"
 
 [[package]]
 name = "air2mqtt"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "bme680" },

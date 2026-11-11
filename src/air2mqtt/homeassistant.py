@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
+from importlib.metadata import version
 from typing import Any
 
-from air2mqtt import __version__
 from air2mqtt.metrics import Metric
 
 REPOSITORY_URL = "https://github.com/Neluxx/air2mqtt"
@@ -52,11 +52,11 @@ def build_discovery_payload(
             "identifiers": [topics.device_id],
             "name": device_name,
             "model": "Air2MQTT",
-            "sw_version": __version__,
+            "sw_version": version("air2mqtt"),
         },
         "origin": {
             "name": "air2mqtt",
-            "sw_version": __version__,
+            "sw_version": version("air2mqtt"),
             "support_url": REPOSITORY_URL,
         },
         "availability_topic": topics.availability,

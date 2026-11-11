@@ -6,8 +6,8 @@ import logging
 import signal
 import sys
 import threading
+from importlib.metadata import version
 
-from air2mqtt import __version__
 from air2mqtt.app import Air2Mqtt
 from air2mqtt.config import ConfigError, Settings
 from air2mqtt.homeassistant import Topics
@@ -28,7 +28,7 @@ def main() -> int:
         level=settings.log_level,
         format="%(levelname)-8s %(name)s: %(message)s",
     )
-    log.info("Starting air2mqtt %s as device '%s'.", __version__, settings.device_id)
+    log.info("Starting air2mqtt %s as device '%s'.", version("air2mqtt"), settings.device_id)
 
     sensors = create_sensors(settings)
     if not sensors:
