@@ -8,8 +8,33 @@ version = "0.1.0"
 description = "Reads BME680 and MH-Z19 sensors and publishes them to Home Assistant via MQTT."
 readme = "README.md"
 license = "MIT"
-authors = [{ name = "Fabian Arndt" }]
+license-files = ["LICENSE"]
+authors = [{ name = "Fabian Arndt", email = "fabian.arndt96@proton.me" }]
 requires-python = ">=3.11"
+keywords = [
+    "home-assistant",
+    "mqtt",
+    "raspberry-pi",
+    "bme680",
+    "mh-z19",
+    "co2",
+    "air-quality",
+    "sensor",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: No Input/Output (Daemon)",
+    "Intended Audience :: End Users/Desktop",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Home Automation",
+    "Topic :: System :: Hardware",
+]
 dependencies = [
     "bme680>=2.0",
     "paho-mqtt>=2.1,<3",
@@ -25,6 +50,8 @@ air2mqtt = "air2mqtt.__main__:main"
 
 [project.urls]
 Repository = "https://github.com/Neluxx/air2mqtt"
+Issues = "https://github.com/Neluxx/air2mqtt/issues"
+Changelog = "https://github.com/Neluxx/air2mqtt/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]
