@@ -87,6 +87,13 @@ python3 -m venv .venv
 .venv/bin/pip install .
 ```
 
+The clone provides `.env.example` and the systemd unit. Instead of `pip install .`, you can
+also install the released version from [PyPI](https://pypi.org/project/air2mqtt/):
+
+```bash
+.venv/bin/pip install air2mqtt
+```
+
 ### 3. Configure
 
 ```bash
@@ -120,7 +127,7 @@ Logs: `journalctl -u air2mqtt -f`
 ```bash
 cd /opt/air2mqtt
 git pull
-.venv/bin/pip install .
+.venv/bin/pip install .   # or: .venv/bin/pip install --upgrade air2mqtt
 sudo systemctl restart air2mqtt
 ```
 
