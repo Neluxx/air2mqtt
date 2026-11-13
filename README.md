@@ -1,232 +1,74 @@
 # air2mqtt
 
-Reads a **BME680** (temperature, humidity, pressure) and an **MH-Z19** (CO₂)
+[![CI](https://github.com/Neluxx/air2mqtt/actions/workflows/ci.yml/badge.svg)](https://github.com/Neluxx/air2mqtt/actions/workflows/ci.yml)
+[![PyPI](https://img.shields.io/pypi/v/air2mqtt)](https://pypi.org/project/air2mqtt/)
+[![Python](https://img.shields.io/pypi/pyversions/air2mqtt)](https://pypi.org/project/air2mqtt/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](https://github.com/Neluxx/air2mqtt/blob/main/LICENSE)
+
+**Indoor air quality for Home Assistant, from a Raspberry Pi.**
+
+air2mqtt reads a **BME680** (temperature, humidity, pressure) and an **MH-Z19** (CO₂)
 sensor on a Raspberry Pi and publishes the values to **Home Assistant via MQTT**.
 
-- Entities appear automatically through **MQTT discovery** – no YAML needed.
-- Runs as a long-lived **systemd service** with automatic MQTT reconnects.
-- Availability via MQTT **Last Will**: the device shows as unavailable when the node goes offline.
-- Stale values expire automatically if a sensor stops reporting.
-- If one sensor is missing or fails, the other keeps working.
-
-Requires Home Assistant **2024.11 or newer** (device-based MQTT discovery).
-
----
-
-## Hardware wiring
-
-### BME680 → Raspberry Pi (I²C)
-
-| BME680 pin | Pi GPIO header         |
-|------------|------------------------|
-| VCC        | Pin 1  (3.3 V)         |
-| GND        | Pin 6  (GND)           |
-| SDA        | Pin 3  (GPIO 2 / SDA1) |
-| SCL        | Pin 5  (GPIO 3 / SCL1) |
-
-Verify: `sudo i2cdetect -y 1` → should show address `0x76` or `0x77`.
-
-### MH-Z19 → Raspberry Pi (UART)
-
-| MH-Z19 pin | Pi GPIO header          |
-|------------|-------------------------|
-| Vin (5 V)  | Pin 2  (5 V)            |
-| GND        | Pin 14 (GND)            |
-| TXD        | Pin 10 (GPIO 15 / RXD)  |
-| RXD        | Pin 8  (GPIO 14 / TXD)  |
-
-MH-Z19 TX → Pi RX and MH-Z19 RX → Pi TX (cross-over).
-
----
-
-## Home Assistant preparation
-
-air2mqtt publishes its readings to Home Assistant over MQTT, so you need a running
-Home Assistant instance with an MQTT broker.
-
-1. **Install Home Assistant.** Follow the official guide for your hardware, e.g.
-   [Home Assistant on a Raspberry Pi](https://www.home-assistant.io/installation/raspberrypi/).
-   Other platforms are listed on the [installation overview](https://www.home-assistant.io/installation/).
-2. **Set up an MQTT broker.** The easiest option is the Mosquitto broker add-on together
-   with the MQTT integration. See the official
-   [MQTT integration documentation](https://www.home-assistant.io/integrations/mqtt/).
-   Any other MQTT broker works as well.
-3. **Note the broker credentials.** You'll need them for the `.env` file
-   (see [Configuration](#configuration)):
-
-   | `.env` variable | Value                                      |
-   |-----------------|--------------------------------------------|
-   | `MQTT_HOST`     | Hostname or IP of your broker              |
-   | `MQTT_PORT`     | Broker port (`1883`, or `8883` with TLS)   |
-   | `MQTT_USERNAME` | Username of the MQTT / Home Assistant user |
-   | `MQTT_PASSWORD` | Password of that user                      |
-
----
-
-## Installation on the Raspberry Pi
-
-### 1. Enable I²C and UART
-
-```bash
-sudo raspi-config
-# Interface Options → I2C → Enable
-# Interface Options → Serial Port → login shell: No, serial hardware: Yes
-sudo usermod -aG i2c,dialout $USER   # log out and back in afterwards
-sudo reboot
+```
+BME680 ──I²C──┐
+              ├── Raspberry Pi (air2mqtt) ──MQTT──> Broker ──> Home Assistant
+MH-Z19 ──UART─┘
 ```
 
-### 2. Clone and install
+## Features
+
+- **Zero configuration in Home Assistant** – entities appear automatically through MQTT discovery.
+- **Runs unattended** as a systemd service with automatic MQTT reconnects.
+- **Honest availability** – the device shows as unavailable when the node goes offline (MQTT Last Will),
+  and stale values expire if a sensor stops reporting.
+- **Fault tolerant** – if one sensor is missing or fails, the other keeps working.
+
+## Requirements
+
+- Raspberry Pi (or another Linux board) with Python 3.11 or newer
+- BME680 and/or MH-Z19 sensor
+- Home Assistant **2024.11 or newer** with an MQTT broker
+
+## Quick start
 
 ```bash
-sudo apt install python3-venv git i2c-tools
-sudo git clone https://github.com/Neluxx/air2mqtt.git /opt/air2mqtt
-sudo chown -R $USER:$USER /opt/air2mqtt
-
-cd /opt/air2mqtt
 python3 -m venv .venv
-.venv/bin/pip install .
-```
-
-The clone provides `.env.example` and the systemd unit. Instead of `pip install .`, you can
-also install the released version from [PyPI](https://pypi.org/project/air2mqtt/):
-
-```bash
 .venv/bin/pip install air2mqtt
 ```
 
-### 3. Configure
+Create a `.env` file in the current directory with at least `MQTT_HOST`, `MQTT_USERNAME`
+and `MQTT_PASSWORD`, then run `.venv/bin/air2mqtt`. The device appears in Home Assistant
+automatically.
 
-```bash
-cp .env.example .env
-nano .env
-chmod 600 .env
-```
+For a complete setup, follow the [installation guide][installation]. It covers
+enabling I²C/UART and running air2mqtt as a service.
 
-### 4. Test manually
+## Documentation
 
-```bash
-.venv/bin/air2mqtt
-```
+| Guide                                      | What you'll find                                                 |
+|--------------------------------------------|------------------------------------------------------------------|
+| [Hardware][hardware]                       | Wiring the sensors and enabling I²C/UART on the Pi               |
+| [Installation][installation]               | Prerequisites, setup, systemd service, updating and uninstalling |
+| [Configuration][configuration]             | All environment variables and their defaults                     |
+| [MQTT][mqtt]                               | Topics, discovery, availability and offline behaviour            |
+| [Troubleshooting][troubleshooting]         | Common error messages and how to fix them                        |
+| [Development][development]                 | Running tests, linting and the project layout                    |
 
-The device should now appear in Home Assistant under
-Settings → Devices & services → MQTT. Stop with `Ctrl+C`.
+## Contributing
 
-### 5. Run as a service
+Bug reports and pull requests are welcome on [GitHub](https://github.com/Neluxx/air2mqtt/issues).
+See the [development guide][development] to get started and the [changelog][changelog] for recent changes.
 
-```bash
-sudo cp deploy/air2mqtt.service /etc/systemd/system/
-sudo nano /etc/systemd/system/air2mqtt.service   # adjust User= if needed
-sudo systemctl daemon-reload
-sudo systemctl enable --now air2mqtt
-```
+## License
 
-Logs: `journalctl -u air2mqtt -f`
+[MIT](https://github.com/Neluxx/air2mqtt/blob/main/LICENSE)
 
-### Updating
-
-```bash
-cd /opt/air2mqtt
-git pull
-.venv/bin/pip install .   # or: .venv/bin/pip install --upgrade air2mqtt
-sudo systemctl restart air2mqtt
-```
-
----
-
-## Configuration
-
-All settings are environment variables, read from `/opt/air2mqtt/.env`.
-
-| Variable              | Default          | Description                                        |
-|-----------------------|------------------|----------------------------------------------------|
-| `MQTT_HOST`           | *(required)*     | Hostname or IP of the MQTT broker                  |
-| `MQTT_PORT`           | `1883`           | Broker port (usually `8883` with TLS)              |
-| `MQTT_USERNAME`       | *(empty)*        | MQTT user                                          |
-| `MQTT_PASSWORD`       | *(empty)*        | MQTT password                                      |
-| `MQTT_TLS`            | `false`          | Connect via TLS using the system CA certificates   |
-| `MQTT_KEEPALIVE`      | `60`             | MQTT keepalive in seconds                          |
-| `MQTT_BASE_TOPIC`     | `air2mqtt`       | Prefix for state and availability topics           |
-| `HA_DISCOVERY_PREFIX` | `homeassistant`  | Home Assistant discovery prefix                    |
-| `DEVICE_ID`           | hostname         | Stable, unique ID of this node                     |
-| `DEVICE_NAME`         | `Air2MQTT`       | Device name shown in Home Assistant                |
-| `READ_INTERVAL`       | `60`             | Seconds between measurements (min. 5)              |
-| `TEMPERATURE_OFFSET`  | `0`              | BME680 temperature correction in °C (−10 to 10)    |
-| `MHZ19_PORT`          | `/dev/serial0`   | UART port of the MH-Z19                            |
-| `LOG_LEVEL`           | `INFO`           | `DEBUG`, `INFO`, `WARNING` or `ERROR`              |
-
----
-
-## MQTT topics
-
-With `DEVICE_ID=livingroom`:
-
-| Topic                                         | Payload                        | Retained |
-|-----------------------------------------------|--------------------------------|----------|
-| `homeassistant/device/livingroom/config`      | Discovery JSON                 | yes      |
-| `air2mqtt/livingroom/availability`            | `online` / `offline`           | yes      |
-| `air2mqtt/livingroom/temperature`             | `21.4` (°C)                    | no       |
-| `air2mqtt/livingroom/humidity`                | `48.1` (%)                     | no       |
-| `air2mqtt/livingroom/pressure`                | `1013.2` (hPa)                 | no       |
-| `air2mqtt/livingroom/carbon_dioxide`          | `812` (ppm)                    | no       |
-
-The node listens on `homeassistant/status` and re-publishes its discovery
-config whenever Home Assistant restarts.
-
-### When the broker is unreachable
-
-Measurements taken while the broker is unreachable are logged and dropped,
-not buffered. Home Assistant timestamps every state on arrival, so values
-delivered late would appear at the wrong time. Instead, the history shows a
-gap and the sensors turn `unavailable` after three missed intervals.
-
-Measurement values are not retained either: Home Assistant restores the last
-state itself, and a replayed retained value could revive an expired sensor.
-
----
-
-## Project layout
-
-```
-air2mqtt/
-├── pyproject.toml
-├── .env.example
-├── deploy/
-│   └── air2mqtt.service      # systemd unit
-├── src/
-│   └── air2mqtt/
-│       ├── __main__.py       # entry point, wiring, signal handling
-│       ├── app.py            # measurement loop
-│       ├── config.py         # settings from environment
-│       ├── metrics.py        # measured quantities (unit, device class, precision)
-│       ├── homeassistant.py  # topics and discovery payload
-│       ├── mqtt_client.py    # paho-mqtt wrapper (LWT, reconnects)
-│       └── sensors/
-│           ├── base.py       # Sensor protocol and SensorError
-│           ├── bme680.py     # BME680 driver wrapper
-│           └── mhz19.py      # MH-Z19 UART protocol
-└── tests/
-```
-
----
-
-## Development
-
-```bash
-uv sync
-uv run pytest
-uv run ruff check && uv run ruff format --check
-```
-
----
-
-## Troubleshooting
-
-| Symptom | Check |
-|---------|-------|
-| `Skipping BME680` | `sudo i2cdetect -y 1` – is the sensor detected? Is I²C enabled? |
-| `Cannot open MH-Z19 serial port` | `ls -l /dev/serial0` – does the port exist? Reboot after enabling UART. |
-| `Permission denied` on I²C / UART | `groups` – the service user needs `i2c` and `dialout`. |
-| `MQTT connection refused` | Check `MQTT_HOST`, `MQTT_USERNAME` and `MQTT_PASSWORD`. |
-| Device not visible in HA | Is the MQTT integration set up and the discovery prefix correct? |
-| Temperature reads too high | Heat from the Pi warms the BME680. Compare with a reference thermometer and set `TEMPERATURE_OFFSET` (e.g. `-1.5`). |
-| CO₂ values look wrong after power-up | The MH-Z19 needs about 3 minutes to warm up. |
+<!-- Absolute links so they also work on PyPI. -->
+[hardware]: https://github.com/Neluxx/air2mqtt/blob/main/docs/HARDWARE.md
+[installation]: https://github.com/Neluxx/air2mqtt/blob/main/docs/INSTALLATION.md
+[configuration]: https://github.com/Neluxx/air2mqtt/blob/main/docs/CONFIGURATION.md
+[mqtt]: https://github.com/Neluxx/air2mqtt/blob/main/docs/MQTT.md
+[troubleshooting]: https://github.com/Neluxx/air2mqtt/blob/main/docs/TROUBLESHOOTING.md
+[development]: https://github.com/Neluxx/air2mqtt/blob/main/docs/DEVELOPMENT.md
+[changelog]: https://github.com/Neluxx/air2mqtt/blob/main/CHANGELOG.md
