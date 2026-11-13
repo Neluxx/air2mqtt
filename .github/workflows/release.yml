@@ -40,7 +40,7 @@ jobs:
 
       - name: Run tests
         run: |
-          uv sync --locked --extra dev
+          uv sync --locked
           uv run pytest
 
       - name: Build package
