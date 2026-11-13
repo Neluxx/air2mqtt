@@ -48,18 +48,36 @@ python3 -m venv .venv
 
 ## 2. Configure
 
-air2mqtt is configured through a `.env` file in its working directory. Download the
-commented template and fill in your broker details:
+air2mqtt is configured through a `.env` file in its working directory. Create it:
 
 ```bash
 cd /opt/air2mqtt
-curl -fsSL -o .env https://raw.githubusercontent.com/Neluxx/air2mqtt/main/.env.example
 nano .env
+```
+
+Paste the following and fill in your broker details:
+
+```ini
+# Required
+MQTT_HOST=homeassistant.local
+MQTT_USERNAME=air2mqtt
+MQTT_PASSWORD=change-me
+
+# Optional – uncomment to change the defaults
+#DEVICE_ID=livingroom
+#DEVICE_NAME=Living Room
+#READ_INTERVAL=60
+#TEMPERATURE_OFFSET=0
+```
+
+Save with `Ctrl+O`, `Enter` and exit with `Ctrl+X`. Then make the file readable only by you,
+because it contains your password:
+
+```bash
 chmod 600 .env
 ```
 
-At minimum, set `MQTT_HOST`, `MQTT_USERNAME` and `MQTT_PASSWORD`. All options are
-described in [Configuration](CONFIGURATION.md).
+All options are described in [Configuration](CONFIGURATION.md).
 
 ## 3. Test manually
 
@@ -88,13 +106,50 @@ If something doesn't work, see [Troubleshooting](TROUBLESHOOTING.md).
 
 ## 4. Run as a service
 
-Download the systemd unit and set `User=` to the user that owns `/opt/air2mqtt`.
-The unit file assumes `pi`.
+Create the systemd unit:
 
 ```bash
-sudo curl -fsSL -o /etc/systemd/system/air2mqtt.service \
-  https://raw.githubusercontent.com/Neluxx/air2mqtt/main/deploy/air2mqtt.service
-sudo nano /etc/systemd/system/air2mqtt.service   # set User=
+sudo nano /etc/systemd/system/air2mqtt.service
+```
+
+Paste the following and replace `pi` in `User=` with the user that owns `/opt/air2mqtt`
+(`whoami` shows your user name). That user needs to be in the `i2c` and `dialout` groups.
+
+```ini
+[Unit]
+Description=air2mqtt – indoor air sensors to Home Assistant via MQTT
+Documentation=https://github.com/Neluxx/air2mqtt
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/opt/air2mqtt
+ExecStart=/opt/air2mqtt/.venv/bin/air2mqtt
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+RestartSec=10
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectControlGroups=true
+
+[Install]
+WantedBy=multi-user.target
+```
+
+If you installed somewhere other than `/opt/air2mqtt`, adjust `WorkingDirectory=` and
+`ExecStart=` as well. Under `/home`, also change `ProtectHome=true` to
+`ProtectHome=read-only`, otherwise the service can't read `.env`.
+
+Enable and start the service:
+
+```bash
 sudo systemctl daemon-reload
 sudo systemctl enable --now air2mqtt
 ```

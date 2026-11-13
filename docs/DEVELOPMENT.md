@@ -52,6 +52,9 @@ air2mqtt/
 └── tests/
 ```
 
+`docs/INSTALLATION.md` contains a copy of the systemd unit and a short `.env` example.
+When you change `deploy/air2mqtt.service` or add a setting, update it as well.
+
 ## Changelog
 
 Notable changes are recorded in [CHANGELOG.md](../CHANGELOG.md) following
