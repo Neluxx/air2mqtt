@@ -212,10 +212,9 @@ air2mqtt/
 ## Development
 
 ```bash
-python3 -m venv .venv
-.venv/bin/pip install -e ".[dev]"
-.venv/bin/pytest
-.venv/bin/ruff check . && .venv/bin/ruff format --check .
+uv sync
+uv run pytest
+uv run ruff check && uv run ruff format --check
 ```
 
 ---
