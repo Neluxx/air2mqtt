@@ -7,8 +7,7 @@
 
 **Indoor air quality for Home Assistant, from a Raspberry Pi.**
 
-air2mqtt reads a **BME680** (temperature, humidity, pressure) and an **MH-Z19** (CO₂)
-sensor on a Raspberry Pi and publishes the values to **Home Assistant via MQTT**.
+air2mqtt reads a **BME680** (temperature, humidity, pressure) and an **MH-Z19** (CO₂) sensor on a Raspberry Pi and publishes the values to **Home Assistant via MQTT**.
 
 ```
 BME680 ──I²C──┐
@@ -18,57 +17,57 @@ MH-Z19 ──UART─┘
 
 ## Features
 
-- **Zero configuration in Home Assistant** – entities appear automatically through MQTT discovery.
-- **Runs unattended** as a systemd service with automatic MQTT reconnects.
-- **Honest availability** – the device shows as unavailable when the node goes offline (MQTT Last Will),
-  and stale values expire if a sensor stops reporting.
-- **Fault tolerant** – if one sensor is missing or fails, the other keeps working.
+- **No setup in Home Assistant:** the device and its entities appear automatically through MQTT discovery.
+- **Runs unattended** as a systemd service and reconnects to the broker on its own.
+- **Reliable availability:** the device shows as unavailable when the Pi goes offline, and values expire if a sensor stops reporting.
+- **Fault tolerant:** if one sensor is missing or fails, the other keeps working.
 
 ## Requirements
 
 - Raspberry Pi (or another Linux board) with Python 3.11 or newer
-- BME680 and/or MH-Z19 sensor
-- Home Assistant **2024.11 or newer** with an MQTT broker
+- A BME680 and/or an MH-Z19 sensor, wired up with I²C/UART enabled
+- Home Assistant 2024.11 or newer with an MQTT broker
+
+See [Prerequisites](https://github.com/Neluxx/air2mqtt/blob/main/docs/PREREQUISITES.md) for wiring and broker setup.
 
 ## Quick start
 
+**1. Install** into a virtual environment:
+
 ```bash
+sudo mkdir /opt/air2mqtt && sudo chown $USER:$USER /opt/air2mqtt
+cd /opt/air2mqtt
 python3 -m venv .venv
 .venv/bin/pip install air2mqtt
 ```
 
-Create a `.env` file in the current directory with at least `MQTT_HOST`, `MQTT_USERNAME`
-and `MQTT_PASSWORD`, then run `.venv/bin/air2mqtt`. The device appears in Home Assistant
-automatically.
+**2. Configure.** Create `/opt/air2mqtt/.env` with your broker details:
 
-For a complete setup, follow the [installation guide][installation]. It covers
-enabling I²C/UART and running air2mqtt as a service.
+```ini
+MQTT_HOST=homeassistant.local
+MQTT_USERNAME=air2mqtt
+MQTT_PASSWORD=change-me
+```
+
+**3. Run:**
+
+```bash
+.venv/bin/air2mqtt
+```
+
+The device appears in Home Assistant under **Settings → Devices & services → MQTT**. To start air2mqtt automatically at boot, set it up as a [systemd service](https://github.com/Neluxx/air2mqtt/blob/main/docs/INSTALLATION.md#4-run-as-a-service).
 
 ## Documentation
 
-| Guide                                      | What you'll find                                                 |
-|--------------------------------------------|------------------------------------------------------------------|
-| [Hardware][hardware]                       | Wiring the sensors and enabling I²C/UART on the Pi               |
-| [Installation][installation]               | Prerequisites, setup, systemd service, updating and uninstalling |
-| [Configuration][configuration]             | All environment variables and their defaults                     |
-| [MQTT][mqtt]                               | Topics, discovery, availability and offline behaviour            |
-| [Troubleshooting][troubleshooting]         | Common error messages and how to fix them                        |
-| [Development][development]                 | Running tests, linting and the project layout                    |
-
-## Contributing
-
-Bug reports and pull requests are welcome on [GitHub](https://github.com/Neluxx/air2mqtt/issues).
-See the [development guide][development] to get started and the [changelog][changelog] for recent changes.
+| Guide | Contents |
+| --- | --- |
+| [Prerequisites](https://github.com/Neluxx/air2mqtt/blob/main/docs/PREREQUISITES.md) | Sensors and wiring, enabling I²C/UART, Home Assistant and MQTT broker |
+| [Installation](https://github.com/Neluxx/air2mqtt/blob/main/docs/INSTALLATION.md) | Installing, running as a service, updating and uninstalling |
+| [Configuration](https://github.com/Neluxx/air2mqtt/blob/main/docs/CONFIGURATION.md) | All settings and their defaults |
+| [Usage](https://github.com/Neluxx/air2mqtt/blob/main/docs/USAGE.md) | Operating the service, MQTT topics and troubleshooting |
+| [Development](https://github.com/Neluxx/air2mqtt/blob/main/docs/DEVELOPMENT.md) | Setup, tests, conventions and releasing |
+| [Changelog](https://github.com/Neluxx/air2mqtt/blob/main/CHANGELOG.md) | Changes in each release |
 
 ## License
 
 [MIT](https://github.com/Neluxx/air2mqtt/blob/main/LICENSE)
-
-<!-- Absolute links so they also work on PyPI. -->
-[hardware]: https://github.com/Neluxx/air2mqtt/blob/main/docs/HARDWARE.md
-[installation]: https://github.com/Neluxx/air2mqtt/blob/main/docs/INSTALLATION.md
-[configuration]: https://github.com/Neluxx/air2mqtt/blob/main/docs/CONFIGURATION.md
-[mqtt]: https://github.com/Neluxx/air2mqtt/blob/main/docs/MQTT.md
-[troubleshooting]: https://github.com/Neluxx/air2mqtt/blob/main/docs/TROUBLESHOOTING.md
-[development]: https://github.com/Neluxx/air2mqtt/blob/main/docs/DEVELOPMENT.md
-[changelog]: https://github.com/Neluxx/air2mqtt/blob/main/CHANGELOG.md

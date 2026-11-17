@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Dependencies
 
-## [v0.1.0](https://github.com/Neluxx/air2mqtt/releases/tag/v0.1.0) - 2026-11-12
+## [v0.1.0](https://github.com/Neluxx/air2mqtt/releases/tag/v0.1.0) - 2026-11-17
 
 ### Added
 - Read CO₂ from an MH-Z19 via UART without root privileges
