@@ -41,7 +41,7 @@ Without sensors attached, air2mqtt exits with `No sensor could be initialised`. 
 ├── deploy/air2mqtt.service   # systemd unit
 ├── docs/                     # documentation
 ├── src/air2mqtt/
-│   ├── __main__.py           # entry point and signal handling
+│   ├── __main__.py           # entry point: wires everything together, signal handling
 │   ├── app.py                # measurement loop
 │   ├── config.py             # settings from environment variables
 │   ├── metrics.py            # measured values (unit, device class, precision)
@@ -49,13 +49,16 @@ Without sensors attached, air2mqtt exits with `No sensor could be initialised`. 
 │   ├── mqtt_client.py        # paho-mqtt wrapper (last will, reconnects)
 │   └── sensors/
 │       ├── base.py           # Sensor protocol and SensorError
+│       ├── factory.py        # creates the sensors, skips missing ones
 │       ├── bme680.py         # BME680 driver
 │       └── mhz19.py          # MH-Z19 UART protocol
-├── tests/
+├── tests/                    # same layout as src/air2mqtt/
 ├── .env.example
 ├── CHANGELOG.md
 └── pyproject.toml
 ```
+
+Dependencies are passed in explicitly: `__main__.py` is the only module that reads the environment and creates the MQTT client and the sensors. Everything else receives what it needs as arguments, so it can be tested with fakes and without hardware.
 
 ## Keeping the docs in sync
 
