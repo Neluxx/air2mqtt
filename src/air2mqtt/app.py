@@ -10,6 +10,7 @@ from collections.abc import Sequence
 
 from air2mqtt.config import Settings
 from air2mqtt.homeassistant import Topics, build_discovery_payload
+from air2mqtt.metrics import Reading
 from air2mqtt.mqtt_client import ONLINE, MqttClient
 from air2mqtt.sensors import Sensor, SensorError
 
@@ -37,24 +38,31 @@ class Air2Mqtt:
         self._topics = topics
         self._sw_version = sw_version
 
-        self._mqtt.add_connect_handler(self._publish_discovery)
-        self._mqtt.subscribe(topics.homeassistant_status, self._on_homeassistant_status)
-
     def run(self, stop_event: threading.Event) -> None:
         """Measure and publish until ``stop_event`` is set."""
+        self._mqtt.add_connect_handler(self._publish_discovery)
+        self._mqtt.subscribe(self._topics.homeassistant_status, self._on_homeassistant_status)
+
         self._mqtt.start()
         if not self._mqtt.wait_until_connected(_STARTUP_CONNECT_TIMEOUT_SECONDS):
             log.warning("MQTT broker not reachable yet, measuring anyway.")
+
         try:
-            while not stop_event.is_set():
-                started = time.monotonic()
-                self._measure_and_publish()
-                elapsed = time.monotonic() - started
-                stop_event.wait(max(0.0, self._settings.read_interval - elapsed))
+            self._measure_until_stopped(stop_event)
         finally:
-            self._mqtt.stop()
-            for sensor in self._sensors:
-                sensor.close()
+            self._shutdown()
+
+    def _measure_until_stopped(self, stop_event: threading.Event) -> None:
+        while not stop_event.is_set():
+            started = time.monotonic()
+            self._measure_and_publish()
+            elapsed = time.monotonic() - started
+            stop_event.wait(max(0.0, self._settings.read_interval - elapsed))
+
+    def _shutdown(self) -> None:
+        self._mqtt.stop()
+        for sensor in self._sensors:
+            sensor.close()
 
     def _measure_and_publish(self) -> None:
         for sensor in self._sensors:
@@ -63,18 +71,20 @@ class Air2Mqtt:
             except SensorError as exc:
                 log.error("%s: %s", sensor.name, exc)
                 continue
+            self._publish_reading(sensor.name, reading)
 
-            results = [
-                self._mqtt.publish_state(self._topics.state(metric), metric.format(value))
-                for metric, value in reading.items()
-            ]
-            published = all(results)
-            values = ", ".join(f"{m.key}={m.format(v)} {m.unit}" for m, v in reading.items())
+    def _publish_reading(self, sensor_name: str, reading: Reading) -> None:
+        # A list instead of a generator, so every value is sent even if an earlier one fails.
+        results = [
+            self._mqtt.publish_state(self._topics.state(metric), metric.format(value))
+            for metric, value in reading.items()
+        ]
+        values = ", ".join(f"{m.key}={m.format(v)} {m.unit}" for m, v in reading.items())
 
-            if published:
-                log.info("%s: %s", sensor.name, values)
-            else:
-                log.warning("%s: %s (not sent, MQTT broker unreachable)", sensor.name, values)
+        if all(results):
+            log.info("%s: %s", sensor_name, values)
+        else:
+            log.warning("%s: %s (not sent, MQTT broker unreachable)", sensor_name, values)
 
     def _publish_discovery(self) -> None:
         payload = build_discovery_payload(
