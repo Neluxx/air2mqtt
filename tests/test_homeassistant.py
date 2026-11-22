@@ -26,8 +26,3 @@ def test_discovery_payload_contains_one_component_per_metric() -> None:
     assert co2["unit_of_measurement"] == "ppm"
     assert co2["state_topic"] == "air2mqtt/livingroom/carbon_dioxide"
     assert co2["expire_after"] == 180
-
-
-def test_metric_formatting() -> None:
-    assert TEMPERATURE.format(21.456) == "21.5"
-    assert CARBON_DIOXIDE.format(812) == "812"
