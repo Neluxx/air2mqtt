@@ -27,7 +27,14 @@ class BME680Sensor:
             raise SensorError("The 'bme680' package is not installed.") from exc
 
         self._sensor = self._connect(bme680)
+        self._configure(bme680, temperature_offset)
 
+        if temperature_offset:
+            log.info("BME680 initialised (temperature offset %+.2f °C).", temperature_offset)
+        else:
+            log.info("BME680 initialised.")
+
+    def _configure(self, bme680: ModuleType, temperature_offset: float) -> None:
         # Oversampling and filter settings as recommended by Bosch.
         self._sensor.set_humidity_oversample(bme680.OS_2X)
         self._sensor.set_pressure_oversample(bme680.OS_4X)
@@ -40,11 +47,6 @@ class BME680Sensor:
         # Compensates self-heating (e.g. from the Pi below the sensor). The driver applies
         # the offset before humidity compensation, so relative humidity stays consistent.
         self._sensor.set_temp_offset(temperature_offset)
-
-        if temperature_offset:
-            log.info("BME680 initialised (temperature offset %+.2f °C).", temperature_offset)
-        else:
-            log.info("BME680 initialised.")
 
     @staticmethod
     def _connect(bme680: ModuleType) -> Any:
