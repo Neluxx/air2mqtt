@@ -35,7 +35,10 @@ def main() -> int:
     sw_version = version("air2mqtt")
     log.info("Starting air2mqtt %s as device '%s'.", sw_version, settings.device_id)
 
-    sensors = create_sensors(settings)
+    sensors = create_sensors(
+        temperature_offset=settings.temperature_offset,
+        mhz19_port=settings.mhz19_port,
+    )
     if not sensors:
         log.critical("No sensor could be initialised - exiting.")
         return 1
