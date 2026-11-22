@@ -19,6 +19,8 @@ ONLINE = "online"
 OFFLINE = "offline"
 
 _QOS = 1
+# Live measurements are sent fire-and-forget, see publish_state().
+_STATE_QOS = 0
 _RECONNECT_MIN_DELAY = 1
 _RECONNECT_MAX_DELAY = 120
 _SHUTDOWN_TIMEOUT_SECONDS = 5
@@ -77,7 +79,7 @@ class MqttClient:
         """
         if not self._client.is_connected():
             return False
-        result = self._client.publish(topic, payload, qos=0, retain=False)
+        result = self._client.publish(topic, payload, qos=_STATE_QOS, retain=False)
         return result.rc == mqtt.MQTT_ERR_SUCCESS
 
     def start(self) -> None:
