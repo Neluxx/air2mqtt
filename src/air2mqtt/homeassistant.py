@@ -4,12 +4,13 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass
-from importlib.metadata import version
 from typing import Any
 
 from air2mqtt.metrics import Metric
 
 REPOSITORY_URL = "https://github.com/Neluxx/air2mqtt"
+
+_DISCOVERY_QOS = 1
 
 
 @dataclass(frozen=True, slots=True)
@@ -43,6 +44,7 @@ class Topics:
 def build_discovery_payload(
     topics: Topics,
     device_name: str,
+    sw_version: str,
     metrics: Iterable[Metric],
     expire_after: int,
 ) -> dict[str, Any]:
@@ -52,15 +54,15 @@ def build_discovery_payload(
             "identifiers": [topics.device_id],
             "name": device_name,
             "model": "Air2MQTT",
-            "sw_version": version("air2mqtt"),
+            "sw_version": sw_version,
         },
         "origin": {
             "name": "air2mqtt",
-            "sw_version": version("air2mqtt"),
+            "sw_version": sw_version,
             "support_url": REPOSITORY_URL,
         },
         "availability_topic": topics.availability,
-        "qos": 1,
+        "qos": _DISCOVERY_QOS,
         "components": {
             _unique_id(topics, metric): _sensor_component(topics, metric, expire_after)
             for metric in metrics

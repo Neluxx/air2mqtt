@@ -13,10 +13,15 @@ def test_topics() -> None:
 
 def test_discovery_payload_contains_one_component_per_metric() -> None:
     payload = build_discovery_payload(
-        TOPICS, "Living Room", [TEMPERATURE, CARBON_DIOXIDE], expire_after=180
+        TOPICS,
+        device_name="Living Room",
+        sw_version="1.2.3",
+        metrics=[TEMPERATURE, CARBON_DIOXIDE],
+        expire_after=180,
     )
 
     assert payload["device"]["identifiers"] == ["livingroom"]
+    assert payload["device"]["sw_version"] == "1.2.3"
     assert payload["availability_topic"] == TOPICS.availability
     assert set(payload["components"]) == {"livingroom_temperature", "livingroom_carbon_dioxide"}
 

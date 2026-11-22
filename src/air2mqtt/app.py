@@ -29,11 +29,13 @@ class Air2Mqtt:
         sensors: Sequence[Sensor],
         mqtt: MqttClient,
         topics: Topics,
+        sw_version: str,
     ) -> None:
         self._settings = settings
         self._sensors = sensors
         self._mqtt = mqtt
         self._topics = topics
+        self._sw_version = sw_version
 
         self._mqtt.add_connect_handler(self._publish_discovery)
         self._mqtt.subscribe(topics.homeassistant_status, self._on_homeassistant_status)
@@ -78,6 +80,7 @@ class Air2Mqtt:
         payload = build_discovery_payload(
             topics=self._topics,
             device_name=self._settings.device_name,
+            sw_version=self._sw_version,
             metrics=[metric for sensor in self._sensors for metric in sensor.metrics],
             expire_after=self._settings.read_interval * _EXPIRE_AFTER_INTERVALS,
         )

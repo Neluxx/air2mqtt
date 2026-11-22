@@ -32,7 +32,8 @@ def main() -> int:
         level=settings.log_level,
         format="%(levelname)-8s %(name)s: %(message)s",
     )
-    log.info("Starting air2mqtt %s as device '%s'.", version("air2mqtt"), settings.device_id)
+    sw_version = version("air2mqtt")
+    log.info("Starting air2mqtt %s as device '%s'.", sw_version, settings.device_id)
 
     sensors = create_sensors(settings)
     if not sensors:
@@ -49,7 +50,7 @@ def main() -> int:
         client_id=f"air2mqtt-{settings.device_id}",
         availability_topic=topics.availability,
     )
-    node = Air2Mqtt(settings, sensors, mqtt, topics)
+    node = Air2Mqtt(settings, sensors, mqtt, topics, sw_version)
 
     stop_event = threading.Event()
     for sig in (signal.SIGINT, signal.SIGTERM):
