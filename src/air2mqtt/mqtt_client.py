@@ -96,8 +96,9 @@ class MqttClient:
         return self._connected.wait(timeout)
 
     def stop(self) -> None:
-        if self._client.is_connected():
-            info = self._client.publish(self._availability_topic, OFFLINE, qos=_QOS, retain=True)
+        info = self._client.publish(self._availability_topic, OFFLINE, qos=_QOS, retain=True)
+        # Only wait if the message was handed to the connection; otherwise paho raises.
+        if info.rc == mqtt.MQTT_ERR_SUCCESS:
             info.wait_for_publish(timeout=_SHUTDOWN_TIMEOUT_SECONDS)
         self._client.disconnect()
         self._client.loop_stop()

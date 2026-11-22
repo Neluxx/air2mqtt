@@ -61,3 +61,13 @@ def test_stop_announces_offline_and_waits_for_delivery() -> None:
     paho.publish.return_value.wait_for_publish.assert_called_once()
     paho.disconnect.assert_called_once()
     paho.loop_stop.assert_called_once()
+
+
+def test_stop_completes_when_the_connection_is_already_gone() -> None:
+    client, paho = _client(publish_rc=mqtt.MQTT_ERR_NO_CONN)
+
+    client.stop()
+
+    paho.publish.return_value.wait_for_publish.assert_not_called()
+    paho.disconnect.assert_called_once()
+    paho.loop_stop.assert_called_once()
