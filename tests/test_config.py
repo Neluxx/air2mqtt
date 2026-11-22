@@ -26,7 +26,27 @@ def test_defaults() -> None:
 
 
 def test_blank_values_fall_back_to_defaults() -> None:
-    assert _load(MQTT_PORT="  ", LOG_LEVEL="").mqtt.port == 1883
+    settings = _load(
+        MQTT_PORT="  ",
+        LOG_LEVEL="",
+        MQTT_BASE_TOPIC="",
+        HA_DISCOVERY_PREFIX=" ",
+        DEVICE_NAME="",
+        MHZ19_PORT="",
+    )
+
+    assert settings.mqtt.port == 1883
+    assert settings.base_topic == "air2mqtt"
+    assert settings.discovery_prefix == "homeassistant"
+    assert settings.device_name == "Air2MQTT"
+    assert settings.mhz19_port == "/dev/serial0"
+
+
+def test_values_are_trimmed() -> None:
+    settings = _load(HA_DISCOVERY_PREFIX=" homeassistant/ ", MQTT_USERNAME=" air2mqtt ")
+
+    assert settings.discovery_prefix == "homeassistant"
+    assert settings.mqtt.username == "air2mqtt"
 
 
 def test_device_id_is_slugified() -> None:

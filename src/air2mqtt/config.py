@@ -53,15 +53,15 @@ class Settings:
             mqtt=MqttSettings(
                 host=_require(env, "MQTT_HOST"),
                 port=_int(env, "MQTT_PORT", DEFAULT_MQTT_PORT),
-                username=env.get("MQTT_USERNAME") or None,
+                username=_get(env, "MQTT_USERNAME"),
                 password=env.get("MQTT_PASSWORD") or None,
                 use_tls=_bool(env, "MQTT_TLS", False),
                 keepalive=_int(env, "MQTT_KEEPALIVE", DEFAULT_MQTT_KEEPALIVE_SECONDS),
             ),
-            base_topic=env.get("MQTT_BASE_TOPIC", "air2mqtt").strip("/"),
-            discovery_prefix=env.get("HA_DISCOVERY_PREFIX", "homeassistant").strip("/"),
-            device_id=_slugify(env.get("DEVICE_ID") or socket.gethostname()),
-            device_name=env.get("DEVICE_NAME", "Air2MQTT"),
+            base_topic=(_get(env, "MQTT_BASE_TOPIC") or "air2mqtt").strip("/"),
+            discovery_prefix=(_get(env, "HA_DISCOVERY_PREFIX") or "homeassistant").strip("/"),
+            device_id=_slugify(_get(env, "DEVICE_ID") or socket.gethostname()),
+            device_name=_get(env, "DEVICE_NAME") or "Air2MQTT",
             read_interval=_int(
                 env,
                 "READ_INTERVAL",
@@ -69,7 +69,7 @@ class Settings:
                 minimum=MIN_READ_INTERVAL_SECONDS,
             ),
             temperature_offset=_float(env, "TEMPERATURE_OFFSET", 0.0, limit=MAX_TEMPERATURE_OFFSET),
-            mhz19_port=env.get("MHZ19_PORT", "/dev/serial0"),
+            mhz19_port=_get(env, "MHZ19_PORT") or "/dev/serial0",
             log_level=_choice(env, "LOG_LEVEL", "INFO", _LOG_LEVELS),
         )
 
