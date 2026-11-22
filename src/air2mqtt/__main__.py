@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import logging
+import os
 import signal
 import sys
 import threading
 from importlib.metadata import version
+
+from dotenv import find_dotenv, load_dotenv
 
 from air2mqtt.app import Air2Mqtt
 from air2mqtt.config import ConfigError, Settings
@@ -18,8 +21,9 @@ log = logging.getLogger("air2mqtt")
 
 
 def main() -> int:
+    load_dotenv(find_dotenv(usecwd=True))
     try:
-        settings = Settings.from_env()
+        settings = Settings.from_env(os.environ)
     except ConfigError as exc:
         print(f"Configuration error: {exc}", file=sys.stderr)
         return 2

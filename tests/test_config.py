@@ -1,35 +1,19 @@
+from collections.abc import Mapping
+
 import pytest
 
 from air2mqtt.config import ConfigError, Settings
 
-_VARIABLES = (
-    "MQTT_HOST",
-    "MQTT_PORT",
-    "MQTT_USERNAME",
-    "MQTT_PASSWORD",
-    "MQTT_TLS",
-    "MQTT_KEEPALIVE",
-    "MQTT_BASE_TOPIC",
-    "HA_DISCOVERY_PREFIX",
-    "DEVICE_ID",
-    "DEVICE_NAME",
-    "READ_INTERVAL",
-    "TEMPERATURE_OFFSET",
-    "MHZ19_PORT",
-    "LOG_LEVEL",
-)
+_REQUIRED = {"MQTT_HOST": "broker.local"}
 
 
-@pytest.fixture(autouse=True)
-def clean_env(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
-    monkeypatch.chdir(tmp_path)  # no stray .env file
-    for name in _VARIABLES:
-        monkeypatch.delenv(name, raising=False)
-    monkeypatch.setenv("MQTT_HOST", "broker.local")
+def _load(**overrides: str) -> Settings:
+    env: Mapping[str, str] = {**_REQUIRED, **overrides}
+    return Settings.from_env(env)
 
 
 def test_defaults() -> None:
-    settings = Settings.from_env()
+    settings = _load()
 
     assert settings.mqtt.host == "broker.local"
     assert settings.mqtt.port == 1883
@@ -41,20 +25,21 @@ def test_defaults() -> None:
     assert settings.log_level == "INFO"
 
 
-def test_device_id_is_slugified(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("DEVICE_ID", "Living Room #1")
-    assert Settings.from_env().device_id == "living_room_1"
+def test_blank_values_fall_back_to_defaults() -> None:
+    assert _load(MQTT_PORT="  ", LOG_LEVEL="").mqtt.port == 1883
 
 
-def test_temperature_offset(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("TEMPERATURE_OFFSET", "-1.5")
-    assert Settings.from_env().temperature_offset == -1.5
+def test_device_id_is_slugified() -> None:
+    assert _load(DEVICE_ID="Living Room #1").device_id == "living_room_1"
 
 
-def test_missing_host(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.delenv("MQTT_HOST")
+def test_temperature_offset() -> None:
+    assert _load(TEMPERATURE_OFFSET="-1.5").temperature_offset == -1.5
+
+
+def test_missing_host() -> None:
     with pytest.raises(ConfigError, match="MQTT_HOST"):
-        Settings.from_env()
+        Settings.from_env({})
 
 
 @pytest.mark.parametrize(
@@ -69,7 +54,6 @@ def test_missing_host(monkeypatch: pytest.MonkeyPatch) -> None:
         ("LOG_LEVEL", "VERBOSE"),
     ],
 )
-def test_invalid_values(monkeypatch: pytest.MonkeyPatch, name: str, value: str) -> None:
-    monkeypatch.setenv(name, value)
+def test_invalid_values(name: str, value: str) -> None:
     with pytest.raises(ConfigError, match=name):
-        Settings.from_env()
+        _load(**{name: value})

@@ -1,17 +1,23 @@
-"""Application settings, loaded from environment variables (and an optional ``.env`` file)."""
+"""Application settings, parsed from environment variables."""
 
 from __future__ import annotations
 
-import os
 import re
 import socket
+from collections.abc import Mapping
 from dataclasses import dataclass
 
-from dotenv import find_dotenv, load_dotenv
+DEFAULT_MQTT_PORT = 1883
+DEFAULT_MQTT_KEEPALIVE_SECONDS = 60
+DEFAULT_READ_INTERVAL_SECONDS = 60
+MIN_READ_INTERVAL_SECONDS = 5
+MAX_TEMPERATURE_OFFSET = 10.0
 
 _LOG_LEVELS = ("DEBUG", "INFO", "WARNING", "ERROR")
 _TRUE_VALUES = {"1", "true", "yes", "on"}
 _FALSE_VALUES = {"0", "false", "no", "off"}
+
+Environment = Mapping[str, str]
 
 
 class ConfigError(ValueError):
@@ -41,39 +47,48 @@ class Settings:
     log_level: str
 
     @classmethod
-    def from_env(cls) -> Settings:
-        load_dotenv(find_dotenv(usecwd=True))
-
+    def from_env(cls, env: Environment) -> Settings:
+        """Parse all settings from ``env``, e.g. ``os.environ``."""
         return cls(
             mqtt=MqttSettings(
-                host=_require("MQTT_HOST"),
-                port=_int("MQTT_PORT", 1883),
-                username=os.getenv("MQTT_USERNAME") or None,
-                password=os.getenv("MQTT_PASSWORD") or None,
-                use_tls=_bool("MQTT_TLS", False),
-                keepalive=_int("MQTT_KEEPALIVE", 60),
+                host=_require(env, "MQTT_HOST"),
+                port=_int(env, "MQTT_PORT", DEFAULT_MQTT_PORT),
+                username=env.get("MQTT_USERNAME") or None,
+                password=env.get("MQTT_PASSWORD") or None,
+                use_tls=_bool(env, "MQTT_TLS", False),
+                keepalive=_int(env, "MQTT_KEEPALIVE", DEFAULT_MQTT_KEEPALIVE_SECONDS),
             ),
-            base_topic=os.getenv("MQTT_BASE_TOPIC", "air2mqtt").strip("/"),
-            discovery_prefix=os.getenv("HA_DISCOVERY_PREFIX", "homeassistant").strip("/"),
-            device_id=_slugify(os.getenv("DEVICE_ID") or socket.gethostname()),
-            device_name=os.getenv("DEVICE_NAME", "Air2MQTT"),
-            read_interval=_int("READ_INTERVAL", 60, minimum=5),
-            temperature_offset=_float("TEMPERATURE_OFFSET", 0.0, limit=10.0),
-            mhz19_port=os.getenv("MHZ19_PORT", "/dev/serial0"),
-            log_level=_choice("LOG_LEVEL", "INFO", _LOG_LEVELS),
+            base_topic=env.get("MQTT_BASE_TOPIC", "air2mqtt").strip("/"),
+            discovery_prefix=env.get("HA_DISCOVERY_PREFIX", "homeassistant").strip("/"),
+            device_id=_slugify(env.get("DEVICE_ID") or socket.gethostname()),
+            device_name=env.get("DEVICE_NAME", "Air2MQTT"),
+            read_interval=_int(
+                env,
+                "READ_INTERVAL",
+                DEFAULT_READ_INTERVAL_SECONDS,
+                minimum=MIN_READ_INTERVAL_SECONDS,
+            ),
+            temperature_offset=_float(env, "TEMPERATURE_OFFSET", 0.0, limit=MAX_TEMPERATURE_OFFSET),
+            mhz19_port=env.get("MHZ19_PORT", "/dev/serial0"),
+            log_level=_choice(env, "LOG_LEVEL", "INFO", _LOG_LEVELS),
         )
 
 
-def _require(name: str) -> str:
-    value = os.getenv(name, "").strip()
-    if not value:
+def _get(env: Environment, name: str) -> str | None:
+    """Return the trimmed value of ``name``, or None if it is unset or blank."""
+    return env.get(name, "").strip() or None
+
+
+def _require(env: Environment, name: str) -> str:
+    value = _get(env, name)
+    if value is None:
         raise ConfigError(f"Environment variable {name} is required.")
     return value
 
 
-def _int(name: str, default: int, *, minimum: int = 1) -> int:
-    raw = os.getenv(name)
-    if raw is None or raw.strip() == "":
+def _int(env: Environment, name: str, default: int, *, minimum: int = 1) -> int:
+    raw = _get(env, name)
+    if raw is None:
         return default
     try:
         value = int(raw)
@@ -84,10 +99,10 @@ def _int(name: str, default: int, *, minimum: int = 1) -> int:
     return value
 
 
-def _float(name: str, default: float, *, limit: float) -> float:
+def _float(env: Environment, name: str, default: float, *, limit: float) -> float:
     """Parse a float whose absolute value must not exceed ``limit``."""
-    raw = os.getenv(name)
-    if raw is None or raw.strip() == "":
+    raw = _get(env, name)
+    if raw is None:
         return default
     try:
         value = float(raw)
@@ -98,11 +113,11 @@ def _float(name: str, default: float, *, limit: float) -> float:
     return value
 
 
-def _bool(name: str, default: bool) -> bool:
-    raw = os.getenv(name)
-    if raw is None or raw.strip() == "":
+def _bool(env: Environment, name: str, default: bool) -> bool:
+    raw = _get(env, name)
+    if raw is None:
         return default
-    value = raw.strip().lower()
+    value = raw.lower()
     if value in _TRUE_VALUES:
         return True
     if value in _FALSE_VALUES:
@@ -110,8 +125,8 @@ def _bool(name: str, default: bool) -> bool:
     raise ConfigError(f"{name} must be true or false, got {raw!r}.")
 
 
-def _choice(name: str, default: str, choices: tuple[str, ...]) -> str:
-    value = (os.getenv(name) or default).strip().upper()
+def _choice(env: Environment, name: str, default: str, choices: tuple[str, ...]) -> str:
+    value = (_get(env, name) or default).upper()
     if value not in choices:
         raise ConfigError(f"{name} must be one of {', '.join(choices)}, got {value!r}.")
     return value
