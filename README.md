@@ -67,7 +67,3 @@ The device appears in Home Assistant under **Settings → Devices & services →
 | [Usage](https://github.com/Neluxx/air2mqtt/blob/main/docs/USAGE.md) | Operating the service, MQTT topics and troubleshooting |
 | [Development](https://github.com/Neluxx/air2mqtt/blob/main/docs/DEVELOPMENT.md) | Setup, tests, conventions and releasing |
 | [Changelog](https://github.com/Neluxx/air2mqtt/blob/main/CHANGELOG.md) | Changes in each release |
-
-## License
-
-[MIT](https://github.com/Neluxx/air2mqtt/blob/main/LICENSE)
