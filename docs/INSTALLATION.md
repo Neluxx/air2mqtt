@@ -82,6 +82,8 @@ ExecStart=/opt/air2mqtt/.venv/bin/air2mqtt
 Environment=PYTHONUNBUFFERED=1
 Restart=on-failure
 RestartSec=10
+# Exit code 2 = configuration error; restarting will not fix it.
+RestartPreventExitStatus=2
 
 # Hardening
 NoNewPrivileges=true
@@ -97,6 +99,7 @@ WantedBy=multi-user.target
 
 - Set `User=` to the user that owns `/opt/air2mqtt` (run `whoami` to see it).
 - If you installed somewhere else, adjust `WorkingDirectory=` and `ExecStart=` to match. If that location is under `/home`, also set `ProtectHome=read-only`, otherwise the service can't read `.env`.
+- On a configuration error the service stops instead of restarting. Fix `.env`, then run `sudo systemctl restart air2mqtt`.
 
 Enable and start the service:
 
