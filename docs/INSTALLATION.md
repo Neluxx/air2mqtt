@@ -75,6 +75,7 @@ After=network-online.target
 
 [Service]
 Type=simple
+# Adjust to the user that owns /opt/air2mqtt (must be in the i2c and dialout groups).
 User=pi
 WorkingDirectory=/opt/air2mqtt
 ExecStart=/opt/air2mqtt/.venv/bin/air2mqtt
