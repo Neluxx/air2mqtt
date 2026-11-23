@@ -5,9 +5,10 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-Type=simple
+Type=exec
 # Adjust to the user that owns /opt/air2mqtt (must be in the i2c and dialout groups).
 User=pi
+# .env is loaded from the working directory.
 WorkingDirectory=/opt/air2mqtt
 ExecStart=/opt/air2mqtt/.venv/bin/air2mqtt
 Environment=PYTHONUNBUFFERED=1
@@ -22,7 +23,18 @@ PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
 ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
 ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+SystemCallFilter=@system-service
+SystemCallArchitectures=native
 
 [Install]
 WantedBy=multi-user.target

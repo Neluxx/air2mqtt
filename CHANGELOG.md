@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
+- Use `Type=exec` in the systemd unit so a missing executable makes the service start fail
 
 ### Deprecated
 
@@ -21,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stop restarting the systemd service in an endless loop when the configuration is invalid
 
 ### Security
+- Restrict the systemd service further (kernel, clock, hostname, namespaces, address families, system calls)
 
 ### Dependencies
 

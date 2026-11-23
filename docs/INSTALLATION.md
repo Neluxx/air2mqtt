@@ -74,9 +74,10 @@ Wants=network-online.target
 After=network-online.target
 
 [Service]
-Type=simple
+Type=exec
 # Adjust to the user that owns /opt/air2mqtt (must be in the i2c and dialout groups).
 User=pi
+# .env is loaded from the working directory.
 WorkingDirectory=/opt/air2mqtt
 ExecStart=/opt/air2mqtt/.venv/bin/air2mqtt
 Environment=PYTHONUNBUFFERED=1
@@ -91,13 +92,24 @@ PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
 ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectKernelLogs=true
 ProtectControlGroups=true
+ProtectClock=true
+ProtectHostname=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+LockPersonality=true
+SystemCallFilter=@system-service
+SystemCallArchitectures=native
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-- Set `User=` to the user that owns `/opt/air2mqtt` (run `whoami` to see it).
+- Set `User=` to the user that owns `/opt/air2mqtt` (run `whoami` to see it). Recent Raspberry Pi OS releases no longer have a default `pi` user.
 - If you installed somewhere else, adjust `WorkingDirectory=` and `ExecStart=` to match. If that location is under `/home`, also set `ProtectHome=read-only`, otherwise the service can't read `.env`.
 - On a configuration error the service stops instead of restarting. Fix `.env`, then run `sudo systemctl restart air2mqtt`.
 
@@ -145,4 +157,4 @@ python3 -m venv .venv
 .venv/bin/pip install .
 ```
 
-To update, run `git pull` and then `.venv/bin/pip install .` again. The clone already contains `.env.example` and `deploy/air2mqtt.service` as templates.
+To update, run `git pull` and then `.venv/bin/pip install .` again. The clone already contains `.env.example` and `deploy/air2mqtt.service` as templates. After updating the unit file, run `sudo systemctl daemon-reload`.
