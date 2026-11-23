@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
 
 ### Fixed
+- Fall back to the default value when an environment variable is set but empty
+- Finish the shutdown when the MQTT connection drops before the device is marked offline
 
 ### Security
 
