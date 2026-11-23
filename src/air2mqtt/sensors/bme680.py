@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 import time
-from types import ModuleType
-from typing import Any
+
+import bme680
 
 from air2mqtt.metrics import HUMIDITY, PRESSURE, TEMPERATURE, Reading
 from air2mqtt.sensors.base import SensorError
@@ -21,20 +21,15 @@ class BME680Sensor:
     metrics = (TEMPERATURE, HUMIDITY, PRESSURE)
 
     def __init__(self, temperature_offset: float = 0.0) -> None:
-        try:
-            import bme680
-        except ImportError as exc:
-            raise SensorError("The 'bme680' package is not installed.") from exc
-
-        self._sensor = self._connect(bme680)
-        self._configure(bme680, temperature_offset)
+        self._sensor = self._connect()
+        self._configure(temperature_offset)
 
         if temperature_offset:
             log.info("BME680 initialised (temperature offset %+.2f °C).", temperature_offset)
         else:
             log.info("BME680 initialised.")
 
-    def _configure(self, bme680: ModuleType, temperature_offset: float) -> None:
+    def _configure(self, temperature_offset: float) -> None:
         # Oversampling and filter settings as recommended by Bosch.
         self._sensor.set_humidity_oversample(bme680.OS_2X)
         self._sensor.set_pressure_oversample(bme680.OS_4X)
@@ -49,7 +44,7 @@ class BME680Sensor:
         self._sensor.set_temp_offset(temperature_offset)
 
     @staticmethod
-    def _connect(bme680: ModuleType) -> Any:
+    def _connect() -> bme680.BME680:
         errors = []
         for address in (bme680.I2C_ADDR_PRIMARY, bme680.I2C_ADDR_SECONDARY):
             try:
