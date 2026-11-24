@@ -4,7 +4,7 @@ build-backend = "uv_build"
 
 [project]
 name = "air2mqtt"
-version = "0.1.0"
+version = "0.2.0"
 description = "Reads BME680 and MH-Z19 sensors and publishes them to Home Assistant via MQTT."
 readme = "README.md"
 license = "MIT"

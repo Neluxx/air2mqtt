@@ -10,11 +10,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 ### Changed
-- Use `Type=exec` in the systemd unit so a missing executable makes the service start fail
 
 ### Deprecated
 
 ### Removed
+
+### Fixed
+
+### Security
+
+### Dependencies
+
+## [v0.2.0](https://github.com/Neluxx/air2mqtt/releases/tag/v0.2.0) - 2026-11-24
+
+### Changed
+- Use `Type=exec` in the systemd unit so a missing executable makes the service start fail
 
 ### Fixed
 - Fall back to the default value when an environment variable is set but empty
@@ -23,8 +33,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 - Restrict the systemd service further (kernel, clock, hostname, namespaces, address families, system calls)
-
-### Dependencies
 
 ## [v0.1.0](https://github.com/Neluxx/air2mqtt/releases/tag/v0.1.0) - 2026-11-17
 
